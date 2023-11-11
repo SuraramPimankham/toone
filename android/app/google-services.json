@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "269629618821",
+    "project_id": "toon-etoon",
+    "storage_bucket": "toon-etoon.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:269629618821:android:57696462dc6eb0a32807ec",
+        "android_client_info": {
+          "package_name": "com.example.apptoon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDH6yu6BIo4oJ7rX1i7RYkWHA1J9WG-6A4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
