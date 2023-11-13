@@ -455,84 +455,111 @@ class _DetailPageState extends State<DetailPage> {
                               selectedEpisodeId = episode_id;
                             });
 
-                            // สร้าง bool check data coiiection users ที่ doc == uid ให้ค้นหา field purchasedEpisodes ซึ่งเก็บ เป็น array โดยใน array เก็บเป็น map ใน เก็บ 3 field
-                            if (true) {}
-
                             if (isLocked) {
-                              // ดึงข้อมูล coin จาก Firestore
+                              String episode_id = episodeIds[entry.key];
+                              setState(() {
+                                selectedEpisodeId = episode_id;
+                              });
+
+                              // ตรวจสอบว่ามีข้อมูลที่ต้องการใน Firestore
                               DocumentSnapshot userDoc = await FirebaseFirestore
                                   .instance
                                   .collection('users')
                                   .doc(_user?.uid)
                                   .get();
 
-                              // ตรวจสอบว่ามีเหรียญพอหรือไม่
-                              int coins = userDoc['coin'] ?? 0;
+                              List<dynamic> purchasedEpisodes =
+                                  userDoc['purchasedEpisodes'] ?? [];
+                              bool purchased = false;
 
-                              if (coins >= 15) {
-                                // แสดงตัวเลือกการซื้อ
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Text('EP ที่ติด Icon Lock'),
-                                      content:
-                                          Text("ต้องการซื้อ EP นี้หรือไม่?"),
-                                      actions: <Widget>[
-                                        TextButton(
-                                          child: Text('ยกเลิก'),
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
-                                        TextButton(
-                                          child: Text('ซื้อ'),
-                                          onPressed: () async {
-                                            // ลบเหรียญ 15 จาก Firestore
-                                            await FirebaseFirestore.instance
-                                                .collection('users')
-                                                .doc(_user?.uid ??
-                                                    '') // ใช้ null-aware operator ที่นี่
-                                                .update({
-                                              'coin': FieldValue.increment(-15),
-                                            });
+                              for (var episode in purchasedEpisodes) {
+                                if (episode['episodeId'] == episode_id) {
+                                  purchased = true;
+                                  break;
+                                }
+                              }
 
-                                            // ทำการอัปเดตฟิลด์ purchasedEpisodes ใน Firestore
-                                            await updatePurchasedEpisodes(
-                                                _user?.uid ?? '',
-                                                widget.id,
-                                                widget.title,
-                                                episode_id);
-
-                                            // ทำการนำทางไปยังหน้า EpisodePage
-                                            Navigator.of(context).pop();
-                                            goToEpisodePage(episode_id);
-                                          },
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
+                              if (purchased) {
+                                print("1");
+                                print(purchased);
+                                // ผู้ใช้ซื้อแล้ว ให้ไปยังหน้า EpisodePage โดยตรง
+                                goToEpisodePage(episode_id);
                               } else {
-                                // แจ้งเตือนถ้าเงินไม่พอ
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Text('เงินไม่พอ'),
-                                      content: Text(
-                                          "คุณไม่มีเหรียญเพียงพอที่จะซื้อ EP นี้"),
-                                      actions: <Widget>[
-                                        TextButton(
-                                          child: Text('ตกลง'),
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
-                                      ],
+                                // ผู้ใช้ยังไม่ได้ซื้อ
+                                // ตรวจสอบว่าตอนไม่ได้ Lock หรือไม่
+                                if (!isLocked) {
+                                  goToEpisodePage(episode_id);
+                                } else {
+                                  // ตรวจสอบว่ามีเหรียญพอหรือไม่
+                                  int coins = userDoc['coin'] ?? 0;
+
+                                  if (coins >= 15) {
+                                    // แสดงตัวเลือกการซื้อ
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          title: Text('EP ที่ติด Icon Lock'),
+                                          content: Text(
+                                              "ต้องการซื้อ EP นี้หรือไม่?"),
+                                          actions: <Widget>[
+                                            TextButton(
+                                              child: Text('ยกเลิก'),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                            ),
+                                            TextButton(
+                                              child: Text('ซื้อ'),
+                                              onPressed: () async {
+                                                // ลบเหรียญ 15 จาก Firestore
+                                                await FirebaseFirestore.instance
+                                                    .collection('users')
+                                                    .doc(_user?.uid ??
+                                                        '') // ใช้ null-aware operator ที่นี่
+                                                    .update({
+                                                  'coin':
+                                                      FieldValue.increment(-15),
+                                                });
+
+                                                // ทำการอัปเดตฟิลด์ purchasedEpisodes ใน Firestore
+                                                await updatePurchasedEpisodes(
+                                                    _user?.uid ?? '',
+                                                    widget.id,
+                                                    widget.title,
+                                                    episode_id);
+
+                                                // ทำการนำทางไปยังหน้า EpisodePage
+                                                Navigator.of(context).pop();
+                                                goToEpisodePage(episode_id);
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      },
                                     );
-                                  },
-                                );
+                                  } else {
+                                    // แจ้งเตือนถ้าเงินไม่พอ
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                          title: Text('เงินไม่พอ'),
+                                          content: Text(
+                                              "คุณไม่มีเหรียญเพียงพอที่จะซื้อ EP นี้"),
+                                          actions: <Widget>[
+                                            TextButton(
+                                              child: Text('ตกลง'),
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  }
+                                }
                               }
                             } else {
                               // EP ไม่ติด Icon Lock ให้ไปยังหน้า EpisodePage โดยตรง
